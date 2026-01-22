@@ -1,22 +1,34 @@
-use serialport::{DataBits, StopBits, Parity, FlowControl};
+use serialport::{DataBits, FlowControl, Parity, StopBits};
 
-fn main() {
-    // Make this configurable later
-    let port_name = "/dev/ttyACM0";
-
-    // Based on datasheet
-    let baud_rate = 115200;
-    let data_bits = DataBits::Eight;
-    let stop_bits = StopBits::One;
-    let parity = Parity::None;
-    let flow_control = FlowControl::None;
-
-
-    let builder = serialport::new(port_name, baud_rate)
-        .stop_bits(stop_bits)
-        .data_bits(data_bits)
-        .parity(parity)
-        .flow_control(flow_control);
-
-
+struct SerialParams<'a> {
+    port_name: &'a str,
+    baud_rate: u32,
+    data_bits: DataBits,
+    stop_bits: StopBits,
+    parity: Parity,
+    flow_control: FlowControl,
 }
+
+fn init_serial_params() {
+    let serial_params = SerialParams {
+        port_name: "/dev/ttyACM0",
+        baud_rate: 115200,
+        data_bits: DataBits::Eight,
+        stop_bits: StopBits::One,
+        parity: Parity::None,
+        flow_control: FlowControl::None,
+    };
+
+    let builder = serialport::new(serial_params.port_name, serial_params.baud_rate)
+        .stop_bits(serial_params.stop_bits)
+        .data_bits(serial_params.data_bits)
+        .parity(serial_params.parity)
+        .flow_control(serial_params.flow_control);
+
+    let port = builder.open().unwrap_or_else(|e| {
+        eprintln!("Failed to open {}. Error: {}", serial_params.port_name, e);
+        ::std::process::exit(1);
+    });
+}
+
+fn main() {}
