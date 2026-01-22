@@ -1,5 +1,5 @@
-use serialport::{SerialPort, DataBits, FlowControl, Parity, StopBits};
-use std::io::{self, Write/*, ErrorKind*/};
+use serialport::{DataBits, FlowControl, Parity, SerialPort, StopBits};
+use std::io::{self, Write /*, ErrorKind*/};
 use std::time::Duration;
 
 // With Lifetime
@@ -21,11 +21,12 @@ fn send_command(port: &mut Box<dyn SerialPort>, command: &[u8]) {
     }
 }
 
+// Helper function
 fn read_response(port: &mut Box<dyn SerialPort>) {
     let mut serial_buf: Vec<u8> = vec![0; 10];
-    
-    port.read_exact(serial_buf.as_mut_slice()).expect("Failed to read");
 
+    port.read_exact(serial_buf.as_mut_slice())
+        .expect("Failed to read");
 }
 
 // Set params and open a port
@@ -48,7 +49,11 @@ fn init_port() -> Result<Box<dyn SerialPort>, String> {
         .timeout(serial_params.timeout);
 
     let port = builder.open().map_err(|e| {
-        format!("Error opening port: {}, Error: {}", serial_params.port_name, e).to_string()
+        format!(
+            "Error opening port: {}, Error: {}",
+            serial_params.port_name, e
+        )
+        .to_string()
     })?;
 
     Ok(port)
@@ -57,23 +62,15 @@ fn init_port() -> Result<Box<dyn SerialPort>, String> {
 // Set a motor's id
 // This is important as the first step
 fn set_id(port: &mut Box<dyn SerialPort>, id: u8) {
-    let command = [
-        0xAA,
-        0x55,
-        0x53,
-        id,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-    ];
-    
+    let command = [0xAA, 0x55, 0x53, id, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
+
+    // We must send the command five times in a row
     for _ in 0..5 {
         send_command(port, &command);
         std::thread::sleep(Duration::from_millis(50));
     }
+
+    // no feedback
 }
 
 // This is the second step
@@ -81,23 +78,12 @@ fn set_id(port: &mut Box<dyn SerialPort>, id: u8) {
 // 0x02 velocity
 // 0x03 position
 // The rotating velocity of the motor must be lower than 10rpm when switching to the position loop.
-fn switch_mode(port: &mut Box<dyn SerialPort>, id: u8, mode: u8) {    
-
-    let command = [
-        id,
-        0xA0,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        mode,
-    ];
+fn switch_mode(port: &mut Box<dyn SerialPort>, id: u8, mode: u8) {
+    let command = [id, 0xA0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, mode];
 
     send_command(port, &command);
 
+    // no feedback
 }
 
 fn main() {}
