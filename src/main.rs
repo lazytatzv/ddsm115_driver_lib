@@ -29,7 +29,6 @@ fn read_response(port: &mut Box<dyn SerialPort>) {
         .expect("Failed to read");
 }
 
-
 // CRC16 (CCITT) calculation
 fn calc_crc(data: &[u8]) -> u16 {
     let mut crc: u16 = 0;
@@ -115,7 +114,5 @@ fn switch_to_velocity_mode(port: &mut Box<dyn SerialPort>, id: u8) {
 fn switch_to_position_mode(port: &mut Box<dyn SerialPort>, id: u8) {
     switch_mode(port, id, 3);
 }
-
-
 
 fn main() {}
