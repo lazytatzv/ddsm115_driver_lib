@@ -29,6 +29,23 @@ fn read_response(port: &mut Box<dyn SerialPort>) {
         .expect("Failed to read");
 }
 
+
+// CRC16 (CCITT) calculation
+fn calc_crc(data: &[u8]) -> u16 {
+    let mut crc: u16 = 0;
+    for &byte in data {
+        crc ^= (byte as u16) << 8;
+        for _ in 0..8 {
+            crc = if crc & 0x8000 != 0 {
+                (crc << 1) ^ 0x1021
+            } else {
+                crc << 1
+            };
+        }
+    }
+    crc
+}
+
 // Set params and open a port
 fn init_port() -> Result<Box<dyn SerialPort>, String> {
     let serial_params = SerialParams {
@@ -85,5 +102,20 @@ fn switch_mode(port: &mut Box<dyn SerialPort>, id: u8, mode: u8) {
 
     // no feedback
 }
+
+// wrapper function
+fn switch_to_current_mode(port: &mut Box<dyn SerialPort>, id: u8) {
+    switch_mode(port, id, 1);
+}
+
+fn switch_to_velocity_mode(port: &mut Box<dyn SerialPort>, id: u8) {
+    switch_mode(port, id, 2);
+}
+
+fn switch_to_position_mode(port: &mut Box<dyn SerialPort>, id: u8) {
+    switch_mode(port, id, 3);
+}
+
+
 
 fn main() {}
