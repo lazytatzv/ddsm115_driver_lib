@@ -1,4 +1,6 @@
 use serialport::{SerialPort, DataBits, FlowControl, Parity, StopBits};
+use std::io::{self, Write/*, ErrorKind*/};
+
 
 struct SerialParams<'a> {
     port_name: &'a str,
@@ -33,8 +35,31 @@ fn init_port() -> Result<Box<dyn SerialPort>, String> {
     Ok(port)
 }
 
-fn set_id(port: Box<dyn SerialPort>, id: u8) {
+fn set_id(mut port: Box<dyn SerialPort>, id: u8) {
     //port.write()
+    //
+    let hex_id: u8 = format!("{:02X}", id).parse().expect("Failed to parse into u8");
+    let command = [
+        0xAA,
+        0x55,
+        0x53,
+        hex_id,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+    ];
+    
+    match port.write_all(&command) {
+        Ok(_) => {
+            print!("{:?}", command);
+            std::io::stdout().flush().unwrap();
+        }
+        Err(ref e) if e.kind() == io::ErrorKind::TimedOut => (),
+        Err(e) => eprintln!("{:?}", e),
+    }
 }
 
 fn main() {}
