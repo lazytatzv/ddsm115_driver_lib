@@ -12,10 +12,11 @@ struct SerialParams<'a> {
     flow_control: FlowControl,
 }
 
+// Helper function
 fn send_command(port: &mut Box<dyn SerialPort>, command: &[u8]) {
     match port.write_all(&command) {
-        Ok() => (),
-        Err(e) => format!("{:?}", e),
+        Ok(()) => (),
+        Err(e) => (),
     }
 }
 
@@ -43,6 +44,8 @@ fn init_port() -> Result<Box<dyn SerialPort>, String> {
     Ok(port)
 }
 
+// Set a motor's id
+// This is important as the first step
 fn set_id(port: &mut Box<dyn SerialPort>, id: u8) {
     let command = [
         0xAA,
@@ -58,19 +61,17 @@ fn set_id(port: &mut Box<dyn SerialPort>, id: u8) {
     ];
     
     for _ in 0..5 {
-        match port.write_all(&command) {
-            Ok(_) => {
-                print!("{:?}", command);
-                std::io::stdout().flush().unwrap();
-            }
-            Err(ref e) if e.kind() == io::ErrorKind::TimedOut => (),
-            Err(e) => eprintln!("{:?}", e),
-        }
+        send_command(port, &command);
         std::thread::sleep(Duration::from_millis(50));
     }
 }
 
-fn switch_mode(port: &mut Box<dyn SerialPort>, id: u8, mode: u8) {
+// This is the second step
+// 0x01 current loop
+// 0x02 velocity
+// 0x03 position
+// The rotating velocity of the motor must be lower than 10rpm when switching to the position loop.
+fn switch_mode(port: &mut Box<dyn SerialPort>, id: u8, mode: u8) {    
 
     let command = [
         id,
@@ -84,6 +85,9 @@ fn switch_mode(port: &mut Box<dyn SerialPort>, id: u8, mode: u8) {
         0x00,
         mode,
     ];
+
+    send_command(port, &command);
+
 }
 
 fn main() {}
