@@ -1,4 +1,4 @@
-use serialport::{DataBits, FlowControl, Parity, StopBits};
+use serialport::{SerialPort, DataBits, FlowControl, Parity, StopBits};
 
 struct SerialParams<'a> {
     port_name: &'a str,
@@ -9,7 +9,8 @@ struct SerialParams<'a> {
     flow_control: FlowControl,
 }
 
-fn init_serial_params() {
+// Set params and open a port
+fn init_port() -> Result<Box<dyn SerialPort>, String> {
     let serial_params = SerialParams {
         port_name: "/dev/ttyACM0",
         baud_rate: 115200,
@@ -25,10 +26,15 @@ fn init_serial_params() {
         .parity(serial_params.parity)
         .flow_control(serial_params.flow_control);
 
-    let port = builder.open().unwrap_or_else(|e| {
-        eprintln!("Failed to open {}. Error: {}", serial_params.port_name, e);
-        ::std::process::exit(1);
-    });
+    let port = builder.open().map_err(|e| {
+        format!("Error opening port: {}, Error: {}", serial_params.port_name, e).to_string()
+    })?;
+
+    Ok(port)
+}
+
+fn set_id() {
+    
 }
 
 fn main() {}
