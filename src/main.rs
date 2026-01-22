@@ -12,7 +12,7 @@ struct SerialParams<'a> {
     flow_control: FlowControl,
 }
 
-fn send_command(mut port: Box<dyn SerialPort>, command: &[u8]) {
+fn send_command(port: &mut Box<dyn SerialPort>, command: &[u8]) {
     match port.write_all(&command) {
         Ok() => (),
         Err(e) => format!("{:?}", e),
@@ -43,7 +43,7 @@ fn init_port() -> Result<Box<dyn SerialPort>, String> {
     Ok(port)
 }
 
-fn set_id(mut port: Box<dyn SerialPort>, id: u8) {
+fn set_id(port: &mut Box<dyn SerialPort>, id: u8) {
     let command = [
         0xAA,
         0x55,
@@ -70,7 +70,7 @@ fn set_id(mut port: Box<dyn SerialPort>, id: u8) {
     }
 }
 
-fn switch_mode(mut port: Box<dyn SerialPort>, id: u8, mode: u8) {
+fn switch_mode(port: &mut Box<dyn SerialPort>, id: u8, mode: u8) {
 
     let command = [
         id,
