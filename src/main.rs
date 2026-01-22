@@ -33,8 +33,8 @@ fn init_port() -> Result<Box<dyn SerialPort>, String> {
     Ok(port)
 }
 
-fn set_id() {
-    
+fn set_id(port: Box<dyn SerialPort>, id: u8) {
+    //port.write()
 }
 
 fn main() {}
