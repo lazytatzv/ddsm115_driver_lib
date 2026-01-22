@@ -10,6 +10,7 @@ struct SerialParams<'a> {
     stop_bits: StopBits,
     parity: Parity,
     flow_control: FlowControl,
+    timeout: Duration,
 }
 
 // Helper function
@@ -18,6 +19,13 @@ fn send_command(port: &mut Box<dyn SerialPort>, command: &[u8]) {
         Ok(()) => (),
         Err(e) => (),
     }
+}
+
+fn read_response(port: &mut Box<dyn SerialPort>) {
+    let mut serial_buf: Vec<u8> = vec![0; 10];
+    
+    port.read_exact(serial_buf.as_mut_slice()).expect("Failed to read");
+
 }
 
 // Set params and open a port
@@ -29,13 +37,15 @@ fn init_port() -> Result<Box<dyn SerialPort>, String> {
         stop_bits: StopBits::One,
         parity: Parity::None,
         flow_control: FlowControl::None,
+        timeout: Duration::from_millis(10),
     };
 
     let builder = serialport::new(serial_params.port_name, serial_params.baud_rate)
         .stop_bits(serial_params.stop_bits)
         .data_bits(serial_params.data_bits)
         .parity(serial_params.parity)
-        .flow_control(serial_params.flow_control);
+        .flow_control(serial_params.flow_control)
+        .timeout(serial_params.timeout);
 
     let port = builder.open().map_err(|e| {
         format!("Error opening port: {}, Error: {}", serial_params.port_name, e).to_string()
