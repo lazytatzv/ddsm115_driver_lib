@@ -1,7 +1,8 @@
 use serialport::{SerialPort, DataBits, FlowControl, Parity, StopBits};
 use std::io::{self, Write/*, ErrorKind*/};
+use std::time::Duration;
 
-
+// With Lifetime
 struct SerialParams<'a> {
     port_name: &'a str,
     baud_rate: u32,
@@ -9,6 +10,13 @@ struct SerialParams<'a> {
     stop_bits: StopBits,
     parity: Parity,
     flow_control: FlowControl,
+}
+
+fn send_command(mut port: Box<dyn SerialPort>, command: &[u8]) {
+    match port.write_all(&command) {
+        Ok() => (),
+        Err(e) => format!("{:?}", e),
+    }
 }
 
 // Set params and open a port
@@ -36,14 +44,11 @@ fn init_port() -> Result<Box<dyn SerialPort>, String> {
 }
 
 fn set_id(mut port: Box<dyn SerialPort>, id: u8) {
-    //port.write()
-    //
-    let hex_id: u8 = format!("{:02X}", id).parse().expect("Failed to parse into u8");
     let command = [
         0xAA,
         0x55,
         0x53,
-        hex_id,
+        id,
         0x00,
         0x00,
         0x00,
@@ -52,14 +57,33 @@ fn set_id(mut port: Box<dyn SerialPort>, id: u8) {
         0x00,
     ];
     
-    match port.write_all(&command) {
-        Ok(_) => {
-            print!("{:?}", command);
-            std::io::stdout().flush().unwrap();
+    for _ in 0..5 {
+        match port.write_all(&command) {
+            Ok(_) => {
+                print!("{:?}", command);
+                std::io::stdout().flush().unwrap();
+            }
+            Err(ref e) if e.kind() == io::ErrorKind::TimedOut => (),
+            Err(e) => eprintln!("{:?}", e),
         }
-        Err(ref e) if e.kind() == io::ErrorKind::TimedOut => (),
-        Err(e) => eprintln!("{:?}", e),
+        std::thread::sleep(Duration::from_millis(50));
     }
+}
+
+fn switch_mode(mut port: Box<dyn SerialPort>, id: u8, mode: u8) {
+
+    let command = [
+        id,
+        0xA0,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        mode,
+    ];
 }
 
 fn main() {}
