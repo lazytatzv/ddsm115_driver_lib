@@ -107,7 +107,7 @@ impl MySerialPort {
         // We must send the command five times in a row
         for _ in 0..5 {
             // TODO: This type error must be fixed later
-            Self::send_command(self.port.as_mut().unwrap(), &command);
+            Self::send_command(self.port_mut().unwrap(), &command);
             std::thread::sleep(Duration::from_millis(50));
         }
 
@@ -158,6 +158,14 @@ impl MySerialPort {
     }
 
     // ========== Helper functions ================
+    fn port_mut(&mut self) -> Result<&mut Box<dyn SerialPort>, String> {
+        match self.port.as_mut() {
+            Some(port) => Ok(port),
+            None => Err("Failed to make port mutable".into()),
+        }
+    }
+
+
     // This function will Actually send command
     // Other APIs should interact with motors via the func.
     fn send_command(port: &mut Box<dyn SerialPort>, command: &[u8]) {
