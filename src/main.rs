@@ -62,6 +62,7 @@ impl MySerialPort {
     // ========== Public functions ======
     //
     // Open a serial port
+    // TODO: Result<(), String> -> Result<(), std::err...> or something
     pub fn open(&mut self) -> Result<(), String> {
 
         let builder = serialport::new(self.port_name.clone(), self.baud_rate)
@@ -100,12 +101,13 @@ impl MySerialPort {
     // It is only allowed to be set once each time
     // the power is turned on. The motor can be set
     // after receiving 5 ID setting instructions.
-    pub fn set_id(port: &mut Box<dyn SerialPort>, id: u8) {
+    pub fn set_id(&mut self, id: u8) {
         let command = [0xAA, 0x55, 0x53, id, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
 
         // We must send the command five times in a row
         for _ in 0..5 {
-            Self::send_command(port, &command);
+            // TODO: This type error must be fixed later
+            Self::send_command(self.port.as_mut().unwrap(), &command);
             std::thread::sleep(Duration::from_millis(50));
         }
 
