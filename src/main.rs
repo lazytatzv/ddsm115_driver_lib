@@ -4,6 +4,8 @@ use std::time::Duration;
 
 // TODO: Error Handling will be improved by myself later
 
+// I expect you to use DDSM HAT 
+
 // With Lifetime
 #[derive(Debug)]
 struct MySerialPort {
@@ -73,6 +75,11 @@ impl MySerialPort {
 
     // Set a motor's id
     // This is important as the first step
+    // [Note]: When setting the ID, please ensure that 
+    // there is only one motor on the bus. 
+    // It is only allowed to be set once each time 
+    // the power is turned on. The motor can be set 
+    // after receiving 5 ID setting instructions.
     pub fn set_id(port: &mut Box<dyn SerialPort>, id: u8) {
         let command = [0xAA, 0x55, 0x53, id, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
 
@@ -86,10 +93,14 @@ impl MySerialPort {
     }
 
     // This is the second step
+    // =================
     // 0x01 current loop
     // 0x02 velocity
     // 0x03 position
-    // The rotating velocity of the motor must be lower than 10rpm when switching to the position loop.
+    // ================
+    // The rotating velocity of the motor must be lower than 10rpm 
+    // when switching to the position loop.
+    // [Note]: The default is speed loop.
     fn switch_mode(port: &mut Box<dyn SerialPort>, id: u8, mode: u8) {
         let command = [id, 0xA0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, mode];
 
@@ -111,6 +122,25 @@ impl MySerialPort {
         Self::switch_mode(port, id, 3);
     }
 
+    fn query_id(port: &mut Box<dyn SerialPort>) {
+        // Command without checksum
+        let mut command: Vec<u8> = vec![0xC8, 0x64, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
+
+        // Calculate CRC based on partial command data[0]-data[8]
+        let crc: u8 = Self::calc_crc8_maxim(&command);
+
+        // Complete command
+        command.push(crc);
+
+
+
+        Self::send_command(port, &command);
+
+        Self::read_response(port);
+
+
+    }
+
     // ========== Helper functions ================
     // This function will Actually send command
     // Other APIs should interact with motors via the func.
@@ -121,29 +151,30 @@ impl MySerialPort {
         }
     }
 
-    fn read_response(&self, port: &mut Box<dyn SerialPort>) {
+    fn read_response(port: &mut Box<dyn SerialPort>) {
         let mut serial_buf: Vec<u8> = vec![0; 10];
 
         port.read_exact(serial_buf.as_mut_slice())
             .expect("Failed to read");
     }
 
-    // Instead of parity, we use crc16
-    // CRC16 (CCITT) calculation
-    fn calc_crc(data: &[u8]) -> u16 {
-        let mut crc: u16 = 0;
-        for &byte in data {
-            crc ^= (byte as u16) << 8;
+
+    // Crc8 Maxim
+    fn calc_crc8_maxim(data: &[u8]) -> u8 {
+        let mut crc: u8 = 0x00;
+        for byte in data {
+            crc ^= byte;
             for _ in 0..8 {
-                crc = if crc & 0x8000 != 0 {
-                    (crc << 1) ^ 0x1021
+                if (crc & 0x01) != 0x00 {
+                    crc = (crc >> 1) ^ 0x8C; // Polynomial inverse of 0x31
                 } else {
-                    crc << 1
-                };
+                    crc >>= 1
+                }
             }
         }
         crc
     }
+
 }
 
 fn main() {}
