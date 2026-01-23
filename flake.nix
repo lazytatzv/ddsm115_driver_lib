@@ -12,6 +12,7 @@
     {
       devShells.x86_64-linux.default = pkgs.mkShell {
         buildInputs = [
+          pkgs.systemd
           pkgs.rustc
           pkgs.cargo
           pkgs.pkg-config
