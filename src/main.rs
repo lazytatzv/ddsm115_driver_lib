@@ -9,8 +9,9 @@ use std::time::Duration;
 // With Lifetime
 #[derive(Debug)]
 struct MySerialPort {
-    port_name: String, // Ignore lifetime TODO: This should be altered into dynamic str
-    // (String)
+    // Use Option to make it safer
+    port: Option<Box<dyn SerialPort>>, // The instance
+    port_name: String, 
     baud_rate: u32,
     data_bits: DataBits,
     stop_bits: StopBits,
@@ -26,6 +27,7 @@ impl Default for MySerialPort {
     fn default() -> Self {
         // Self is not an instance but a type
         MySerialPort {
+            port: None,
             port_name: String::from("/dev/ttyACM0"),
             baud_rate: 115200,
             data_bits: DataBits::Eight,
@@ -49,15 +51,18 @@ impl MySerialPort {
     }
 
     // ========== Destructor =========
+    // Currently, I don't implement Drop Trait
     // Serial port closes when the value goes out of scope (RAII)
+    /*
     fn drop(&mut self) {
         println!("Destructor called");
     }
+    */
 
     // ========== Public functions ======
     //
     // Open a serial port
-    pub fn open(&self) -> Result<Box<dyn SerialPort>, String> {
+    pub fn open(&mut self) {
 
         let builder = serialport::new(self.port_name.clone(), self.baud_rate)
             .stop_bits(self.stop_bits)
@@ -68,16 +73,19 @@ impl MySerialPort {
 
         //let port = builder.open().unwrap();
 
-        match builder.open() {
+        let port = match builder.open() {
             Ok(port) => {
                 println!("[INFO] Successfully opened port!");
-                Ok(port)
+                port
             },
             Err(e) => {
                 eprintln!("[Error] Failed to open port");
-                Err(format!("[Error] Failed to open port: {}", e))
+                return;
             },
-        }
+        };
+
+        self.port = Some(port);
+
     }
 
     // just &self is a reference not mutable
@@ -188,7 +196,7 @@ impl MySerialPort {
 
 fn main() {
     let port_name = String::from("/dev/ttyACM0");
-    let port = MySerialPort::new(port_name);
+    let mut port = MySerialPort::new(port_name);
     port.open();
 
 }
