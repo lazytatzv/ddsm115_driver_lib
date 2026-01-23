@@ -173,16 +173,18 @@ impl MySerialPort {
 
     }
 
-    fn read_response(&mut self) -> Result<(), String> {
-        let mut serial_buf: Vec<u8> = vec![0; 10];
+    fn read_response(&mut self) -> Result<[u8; 10], String> {
+        // Exactly 10 bytes
+        //let mut serial_buf: Vec<u8> = vec![0; 10];
+        let mut serial_buf: [u8; 10] = [0u8; 10];
 
         self.port.
             as_mut()
             .ok_or("is_port_available?")?
-            .read_exact(serial_buf.as_mut_slice())
+            .read_exact(&mut serial_buf)
             .map_err(|e| e.to_string())?;
 
-        Ok(())
+        Ok(serial_buf)
     }
 
     fn read_and_send(&mut self, command: &[u8]) -> Result<(), String> {
@@ -212,7 +214,7 @@ impl MySerialPort {
 fn main() {
     let port_name = String::from("/dev/ttyACM0");
     let mut port = MySerialPort::new(port_name);
-    port.open();
+    port.open().expect("Failed to open port");
 
 }
 
