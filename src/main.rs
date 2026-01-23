@@ -2,6 +2,9 @@ use serialport::{DataBits, FlowControl, Parity, SerialPort, StopBits};
 use std::io::{self, Write /*, ErrorKind*/};
 use std::time::Duration;
 
+// TODO: Error Handling will be improved by myself later
+
+
 // With Lifetime
 #[derive(Debug)]
 struct MySerialPort {
@@ -18,7 +21,7 @@ struct MySerialPort {
 impl Default for MySerialPort {
     // baud_rate, data_bits, stop_bits, parity, flow_control
     // are fixed values based on the datasheet
-    fn default() -> Self {
+    fn default() -> Self { // Self is not an instance but a type
         MySerialPort {
             port_name: "/dev/ttyACM0",
             baud_rate: 115200,
@@ -57,14 +60,10 @@ impl MySerialPort {
         Ok(port)
     }
 
-    /*
-    pub fn configure_timeout(timeout_ms: u64) {
-        Self {
-            timeout: Duration::from_millis(timeout_ms),
-            ..Self::default()
-        }
+    // just &self is a reference not mutable
+    pub fn configure_timeout(&mut self, timeout_ms: u64) {
+        self.timeout = Duration::from_millis(timeout_ms);
     }
-    */
 
     // Set a motor's id
     // This is important as the first step
