@@ -132,13 +132,7 @@ impl MySerialPort {
         // Complete command
         command.push(crc);
 
-
-
-        Self::send_command(port, &command);
-
-        Self::read_response(port);
-
-
+        Self::read_and_send(port, &command);
     }
 
     // ========== Helper functions ================
@@ -156,6 +150,11 @@ impl MySerialPort {
 
         port.read_exact(serial_buf.as_mut_slice())
             .expect("Failed to read");
+    }
+
+    fn read_and_send(port: &mut Box<dyn SerialPort>, command: &[u8]) {
+        Self::send_command(port, command);
+        Self::read_response(port);
     }
 
 
