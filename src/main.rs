@@ -136,18 +136,15 @@ impl MySerialPort {
 
     // wrapper functions to ease mode switching
     fn switch_to_current_mode(&mut self, id: u8) -> Result<(), String> {
-        self.switch_mode(id, 1);
-        Ok(())
+        self.switch_mode(id, 1)
     }
 
     fn switch_to_velocity_mode(&mut self, id: u8) -> Result<(), String> {
-        self.switch_mode(id, 2);
-        Ok(())
+        self.switch_mode(id, 2)
     }
 
     fn switch_to_position_mode(&mut self, id: u8) -> Result<(), String> {
-        self.switch_mode(id, 3);
-        Ok(())
+        self.switch_mode(id, 3)
     }
 
     fn query_id(&mut self) {
@@ -189,8 +186,8 @@ impl MySerialPort {
     }
 
     fn read_and_send(&mut self, command: &[u8]) -> Result<(), String> {
-        self.send_command(command);
-        self.read_response();
+        self.send_command(command)?;
+        self.read_response()?;
 
         Ok(())
     }
