@@ -41,6 +41,7 @@ impl MySerialPort {
     // ========== Constructor ========
     // Specify the port name
     pub fn new(port_name: String) -> Self {
+        println!("[INFO] new() constructor called");
         Self {
             port_name,
             ..Self::default() // Fill the rest with defaults
@@ -67,8 +68,11 @@ impl MySerialPort {
         //let port = builder.open().unwrap();
 
         match builder.open() {
-            Ok(port) => Ok(port),
-            Err(e) => Err(format!("Error: {}", e)),
+            Ok(port) => {
+                println!("[INFO] Successfully opened port!");
+                Ok(port)
+            },
+            Err(e) => Err(format!("[Error] Failed to open port: {}", e)),
         }
     }
 
@@ -178,4 +182,7 @@ impl MySerialPort {
     }
 }
 
-fn main() {}
+fn main() {
+    let port_name = String::from("/dev/ttyACM0");
+    let port = MySerialPort::new(port_name);
+}
