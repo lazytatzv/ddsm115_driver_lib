@@ -1,5 +1,5 @@
 use serialport::{DataBits, FlowControl, Parity, SerialPort, StopBits};
-use std::io::{Write /*, ErrorKind*/};
+use std::io::{Write, Error /*, ErrorKind*/};
 use std::time::Duration;
 
 // TODO: Error Handling will be improved by myself later
@@ -107,7 +107,7 @@ impl MySerialPort {
         // We must send the command five times in a row
         for _ in 0..5 {
             // TODO: This type error must be fixed later
-            Self::send_command(self.port_mut()?, &command);
+            self.send_command(&command)?;
             std::thread::sleep(Duration::from_millis(50));
         }
 
@@ -124,72 +124,79 @@ impl MySerialPort {
     // The rotating velocity of the motor must be lower than 10rpm
     // when switching to the position loop.
     // [Note]: The default is speed loop.
-    fn switch_mode(port: &mut Box<dyn SerialPort>, id: u8, mode: u8) {
+    fn switch_mode(&mut self, id: u8, mode: u8) -> Result<(), String> {
         let command = [id, 0xA0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, mode];
 
-        Self::send_command(port, &command);
+        self.send_command(&command)?;
+
+        Ok(())
 
         // no feedback
     }
 
     // wrapper functions to ease mode switching
-    fn switch_to_current_mode(port: &mut Box<dyn SerialPort>, id: u8) {
-        Self::switch_mode(port, id, 1);
+    fn switch_to_current_mode(&mut self, id: u8) -> Result<(), String> {
+        self.switch_mode(id, 1);
+        Ok(())
     }
 
-    fn switch_to_velocity_mode(port: &mut Box<dyn SerialPort>, id: u8) {
-        Self::switch_mode(port, id, 2);
+    fn switch_to_velocity_mode(&mut self, id: u8) -> Result<(), String> {
+        self.switch_mode(id, 2);
+        Ok(())
     }
 
-    fn switch_to_position_mode(port: &mut Box<dyn SerialPort>, id: u8) {
-        Self::switch_mode(port, id, 3);
+    fn switch_to_position_mode(&mut self, id: u8) -> Result<(), String> {
+        self.switch_mode(id, 3);
+        Ok(())
     }
 
-    fn query_id(port: &mut Box<dyn SerialPort>) {
+    fn query_id(&mut self) {
         // Command without checksum
         let mut command: Vec<u8> = vec![0xC8, 0x64, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
 
         // Calculate CRC based on partial command data[0]-data[8]
-        let crc: u8 = Self::calc_crc8_maxim(&command);
+        let crc: u8 = self.calc_crc8_maxim(&command);
 
         // Complete command
         command.push(crc);
 
-        Self::read_and_send(port, &command);
+        self.read_and_send(&command);
     }
 
     // ========== Helper functions ================
-    fn port_mut(&mut self) -> Result<&mut Box<dyn SerialPort>, String> {
-        match self.port.as_mut() {
-            Some(port) => Ok(port),
-            None => Err("Failed to make port mutable".into()),
-        }
-    }
-
 
     // This function will Actually send command
     // Other APIs should interact with motors via the func.
-    fn send_command(port: &mut Box<dyn SerialPort>, command: &[u8]) {
-        match port.write_all(&command) {
-            Ok(()) => (),
-            Err(e) => (),
-        }
+    fn send_command(&mut self, command: &[u8]) -> Result<(), String> {
+        let port = self.port.as_mut().ok_or("port not opened")?;
+
+        // Err -> String conversion
+        port.write_all(command)
+            .map_err(|e| format!("Failed to send command: {:?}", e))
+
     }
 
-    fn read_response(port: &mut Box<dyn SerialPort>) {
+    fn read_response(&mut self) -> Result<(), String> {
         let mut serial_buf: Vec<u8> = vec![0; 10];
 
-        port.read_exact(serial_buf.as_mut_slice())
-            .expect("Failed to read");
+        self.port.
+            as_mut()
+            .ok_or("is_port_available?")?
+            .read_exact(serial_buf.as_mut_slice())
+            .map_err(|e| e.to_string())?;
+
+        Ok(())
     }
 
-    fn read_and_send(port: &mut Box<dyn SerialPort>, command: &[u8]) {
-        Self::send_command(port, command);
-        Self::read_response(port);
+    fn read_and_send(&mut self, command: &[u8]) -> Result<(), String> {
+        self.send_command(command);
+        self.read_response();
+
+        Ok(())
     }
 
     // Crc8 Maxim
-    fn calc_crc8_maxim(data: &[u8]) -> u8 {
+    fn calc_crc8_maxim(&self, data: &[u8]) -> u8 {
         let mut crc: u8 = 0x00;
         for byte in data {
             crc ^= byte;
