@@ -147,7 +147,7 @@ impl MySerialPort {
         self.switch_mode(id, 3)
     }
 
-    fn query_id(&mut self) {
+    fn query_id(&mut self) -> Result<(), String>{
         // Command without checksum
         let mut command: Vec<u8> = vec![0xC8, 0x64, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
 
@@ -157,7 +157,7 @@ impl MySerialPort {
         // Complete command
         command.push(crc);
 
-        self.read_and_send(&command);
+        self.read_and_send(&command)
     }
 
     // ========== Helper functions ================
