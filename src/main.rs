@@ -101,16 +101,17 @@ impl MySerialPort {
     // It is only allowed to be set once each time
     // the power is turned on. The motor can be set
     // after receiving 5 ID setting instructions.
-    pub fn set_id(&mut self, id: u8) {
+    pub fn set_id(&mut self, id: u8) -> Result<(), String> {
         let command = [0xAA, 0x55, 0x53, id, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
 
         // We must send the command five times in a row
         for _ in 0..5 {
             // TODO: This type error must be fixed later
-            Self::send_command(self.port_mut().unwrap(), &command);
+            Self::send_command(self.port_mut()?, &command);
             std::thread::sleep(Duration::from_millis(50));
         }
 
+        Ok(())
         // no feedback
     }
 
