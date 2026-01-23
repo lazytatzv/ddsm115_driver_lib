@@ -4,8 +4,8 @@ use std::time::Duration;
 
 // With Lifetime
 #[derive(Debug)]
-struct MySerialPort<'a> {
-    port_name: &'a str,
+struct MySerialPort {
+    port_name: &'static str,
     baud_rate: u32,
     data_bits: DataBits,
     stop_bits: StopBits,
@@ -15,7 +15,7 @@ struct MySerialPort<'a> {
 }
 
 // Implement the Default trait manually
-impl Default for MySerialPort<'_> {
+impl Default for MySerialPort {
     // baud_rate, data_bits, stop_bits, parity, flow_control
     // are fixed values based on the datasheet
     fn default() -> Self {
@@ -31,12 +31,12 @@ impl Default for MySerialPort<'_> {
     }
 }
 
-impl MySerialPort<'_> {
+impl MySerialPort {
     // ========== Constructor ========
     // Specify the port name and open the port automatically
-    pub fn new(&self, port_name: &str) -> Self {
+    pub fn new(port_name: &'static str) -> Self {
         Self {
-            port_name: &port_name,
+            port_name,
             ..Self::default() // Fill the rest with defaults
         }
     }
