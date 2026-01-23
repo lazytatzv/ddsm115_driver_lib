@@ -1,6 +1,7 @@
 use serialport::{DataBits, FlowControl, Parity, SerialPort, StopBits};
 use std::io::{Write, Error /*, ErrorKind*/};
 use std::time::Duration;
+use std::thread;
 
 // TODO: Error Handling will be improved by myself later
 
@@ -189,6 +190,7 @@ impl MySerialPort {
 
     fn read_and_send(&mut self, command: &[u8]) -> Result<(), String> {
         self.send_command(command)?;
+        thread::sleep(Duration::from_millis(2));
         self.read_response()?;
 
         Ok(())
