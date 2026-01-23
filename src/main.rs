@@ -4,13 +4,13 @@ use std::time::Duration;
 
 // TODO: Error Handling will be improved by myself later
 
-// I expect you to use DDSM HAT 
+// I expect you to use DDSM HAT
 
 // With Lifetime
 #[derive(Debug)]
 struct MySerialPort {
     port_name: &'static str, // Ignore lifetime TODO: This should be altered into dynamic str
-                             // (String)
+    // (String)
     baud_rate: u32,
     data_bits: DataBits,
     stop_bits: StopBits,
@@ -75,10 +75,10 @@ impl MySerialPort {
 
     // Set a motor's id
     // This is important as the first step
-    // [Note]: When setting the ID, please ensure that 
-    // there is only one motor on the bus. 
-    // It is only allowed to be set once each time 
-    // the power is turned on. The motor can be set 
+    // [Note]: When setting the ID, please ensure that
+    // there is only one motor on the bus.
+    // It is only allowed to be set once each time
+    // the power is turned on. The motor can be set
     // after receiving 5 ID setting instructions.
     pub fn set_id(port: &mut Box<dyn SerialPort>, id: u8) {
         let command = [0xAA, 0x55, 0x53, id, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
@@ -98,7 +98,7 @@ impl MySerialPort {
     // 0x02 velocity
     // 0x03 position
     // ================
-    // The rotating velocity of the motor must be lower than 10rpm 
+    // The rotating velocity of the motor must be lower than 10rpm
     // when switching to the position loop.
     // [Note]: The default is speed loop.
     fn switch_mode(port: &mut Box<dyn SerialPort>, id: u8, mode: u8) {
@@ -157,7 +157,6 @@ impl MySerialPort {
         Self::read_response(port);
     }
 
-
     // Crc8 Maxim
     fn calc_crc8_maxim(data: &[u8]) -> u8 {
         let mut crc: u8 = 0x00;
@@ -173,7 +172,6 @@ impl MySerialPort {
         }
         crc
     }
-
 }
 
 fn main() {}
