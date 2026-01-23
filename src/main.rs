@@ -58,6 +58,7 @@ impl MySerialPort {
     //
     // Open a serial port
     pub fn open(&self) -> Result<Box<dyn SerialPort>, String> {
+
         let builder = serialport::new(self.port_name.clone(), self.baud_rate)
             .stop_bits(self.stop_bits)
             .data_bits(self.data_bits)
@@ -72,7 +73,10 @@ impl MySerialPort {
                 println!("[INFO] Successfully opened port!");
                 Ok(port)
             },
-            Err(e) => Err(format!("[Error] Failed to open port: {}", e)),
+            Err(e) => {
+                eprintln!("[Error] Failed to open port");
+                Err(format!("[Error] Failed to open port: {}", e))
+            },
         }
     }
 
@@ -185,4 +189,7 @@ impl MySerialPort {
 fn main() {
     let port_name = String::from("/dev/ttyACM0");
     let port = MySerialPort::new(port_name);
+    MySerialPort::open(&port);
+
 }
+
