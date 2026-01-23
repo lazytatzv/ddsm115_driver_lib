@@ -9,7 +9,7 @@ use std::time::Duration;
 // With Lifetime
 #[derive(Debug)]
 struct MySerialPort {
-    port_name: &'static str, // Ignore lifetime TODO: This should be altered into dynamic str
+    port_name: String, // Ignore lifetime TODO: This should be altered into dynamic str
     // (String)
     baud_rate: u32,
     data_bits: DataBits,
@@ -26,7 +26,7 @@ impl Default for MySerialPort {
     fn default() -> Self {
         // Self is not an instance but a type
         MySerialPort {
-            port_name: "/dev/ttyACM0",
+            port_name: String::from("/dev/ttyACM0"),
             baud_rate: 115200,
             data_bits: DataBits::Eight,
             stop_bits: StopBits::One,
@@ -40,7 +40,7 @@ impl Default for MySerialPort {
 impl MySerialPort {
     // ========== Constructor ========
     // Specify the port name and open the port automatically
-    pub fn new(port_name: &'static str) -> Self {
+    pub fn new(port_name: String) -> Self {
         Self {
             port_name,
             ..Self::default() // Fill the rest with defaults
@@ -57,7 +57,7 @@ impl MySerialPort {
     //
     // Open a serial port
     pub fn open(&self) -> Result<Box<dyn SerialPort>, ()> {
-        let builder = serialport::new(self.port_name, self.baud_rate)
+        let builder = serialport::new(self.port_name.clone(), self.baud_rate)
             .stop_bits(self.stop_bits)
             .data_bits(self.data_bits)
             .parity(self.parity)
