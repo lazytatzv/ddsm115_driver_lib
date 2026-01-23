@@ -189,7 +189,7 @@ impl MySerialPort {
 fn main() {
     let port_name = String::from("/dev/ttyACM0");
     let port = MySerialPort::new(port_name);
-    MySerialPort::open(&port);
+    port.open();
 
 }
 
