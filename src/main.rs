@@ -7,7 +7,8 @@ use std::time::Duration;
 // With Lifetime
 #[derive(Debug)]
 struct MySerialPort {
-    port_name: &'static str,
+    port_name: &'static str, // Ignore lifetime TODO: This should be altered into dynamic str
+                             // (String)
     baud_rate: u32,
     data_bits: DataBits,
     stop_bits: StopBits,
@@ -42,6 +43,12 @@ impl MySerialPort {
             port_name,
             ..Self::default() // Fill the rest with defaults
         }
+    }
+
+    // ========== Destructor =========
+    // Serial port closes when the value goes out of scope (RAII)
+    fn drop(&mut self) {
+        println!("Destructor called");
     }
 
     // ========== Public functions ======
@@ -91,7 +98,7 @@ impl MySerialPort {
         // no feedback
     }
 
-    // wrapper function
+    // wrapper functions to ease mode switching
     fn switch_to_current_mode(port: &mut Box<dyn SerialPort>, id: u8) {
         Self::switch_mode(port, id, 1);
     }
@@ -105,6 +112,8 @@ impl MySerialPort {
     }
 
     // ========== Helper functions ================
+    // This function will Actually send command
+    // Other APIs should interact with motors via the func.
     fn send_command(port: &mut Box<dyn SerialPort>, command: &[u8]) {
         match port.write_all(&command) {
             Ok(()) => (),
@@ -119,6 +128,7 @@ impl MySerialPort {
             .expect("Failed to read");
     }
 
+    // Instead of parity, we use crc16
     // CRC16 (CCITT) calculation
     fn calc_crc(data: &[u8]) -> u16 {
         let mut crc: u16 = 0;
