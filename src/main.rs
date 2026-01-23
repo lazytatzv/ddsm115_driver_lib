@@ -4,7 +4,6 @@ use std::time::Duration;
 
 // TODO: Error Handling will be improved by myself later
 
-
 // With Lifetime
 #[derive(Debug)]
 struct MySerialPort {
@@ -21,11 +20,12 @@ struct MySerialPort {
 impl Default for MySerialPort {
     // baud_rate, data_bits, stop_bits, parity, flow_control
     // are fixed values based on the datasheet
-    fn default() -> Self { // Self is not an instance but a type
+    fn default() -> Self {
+        // Self is not an instance but a type
         MySerialPort {
             port_name: "/dev/ttyACM0",
             baud_rate: 115200,
-            data_bits: DataBits::Eight, 
+            data_bits: DataBits::Eight,
             stop_bits: StopBits::One,
             parity: Parity::None, // use crc8
             flow_control: FlowControl::None,
@@ -47,14 +47,13 @@ impl MySerialPort {
     // ========== Public functions ======
     //
     // Open a serial port
-    pub fn open(&self) -> Result<Box<dyn SerialPort>, ()>{
+    pub fn open(&self) -> Result<Box<dyn SerialPort>, ()> {
         let builder = serialport::new(self.port_name, self.baud_rate)
             .stop_bits(self.stop_bits)
             .data_bits(self.data_bits)
             .parity(self.parity)
             .flow_control(self.flow_control)
             .timeout(self.timeout);
-
 
         let port = builder.open().unwrap();
         Ok(port)
@@ -79,7 +78,6 @@ impl MySerialPort {
         // no feedback
     }
 
-    
     // This is the second step
     // 0x01 current loop
     // 0x02 velocity
@@ -106,7 +104,6 @@ impl MySerialPort {
         Self::switch_mode(port, id, 3);
     }
 
-    
     // ========== Helper functions ================
     fn send_command(port: &mut Box<dyn SerialPort>, command: &[u8]) {
         match port.write_all(&command) {
@@ -121,7 +118,6 @@ impl MySerialPort {
         port.read_exact(serial_buf.as_mut_slice())
             .expect("Failed to read");
     }
-
 
     // CRC16 (CCITT) calculation
     fn calc_crc(data: &[u8]) -> u16 {
@@ -138,8 +134,6 @@ impl MySerialPort {
         }
         crc
     }
-
 }
-
 
 fn main() {}
