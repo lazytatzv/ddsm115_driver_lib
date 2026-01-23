@@ -80,7 +80,7 @@ impl MySerialPort {
             },
             Err(e) => {
                 eprintln!("[Error] Failed to open port");
-                return Err("[Error] Failed to open port".into());
+                return Err(format!("[Error] Failed to open port {}", e));
             },
         };
 
