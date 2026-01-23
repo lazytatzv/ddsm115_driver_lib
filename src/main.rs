@@ -6,7 +6,6 @@ use std::time::Duration;
 
 // I expect you to use DDSM HAT
 
-// With Lifetime
 #[derive(Debug)]
 struct MySerialPort {
     // Use Option to make it safer
@@ -42,6 +41,7 @@ impl Default for MySerialPort {
 impl MySerialPort {
     // ========== Constructor ========
     // Specify the port name
+    // This doesn't open the port cause constructor shouldn't be failible
     pub fn new(port_name: String) -> Self {
         println!("[INFO] new() constructor called");
         Self {
@@ -62,7 +62,7 @@ impl MySerialPort {
     // ========== Public functions ======
     //
     // Open a serial port
-    pub fn open(&mut self) {
+    pub fn open(&mut self) -> Result<(), String> {
 
         let builder = serialport::new(self.port_name.clone(), self.baud_rate)
             .stop_bits(self.stop_bits)
@@ -80,12 +80,12 @@ impl MySerialPort {
             },
             Err(e) => {
                 eprintln!("[Error] Failed to open port");
-                return;
+                return Err("[Error] Failed to open port".into());
             },
         };
 
         self.port = Some(port);
-
+        Ok(())
     }
 
     // just &self is a reference not mutable
