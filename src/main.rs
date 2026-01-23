@@ -1,5 +1,5 @@
 use serialport::{DataBits, FlowControl, Parity, SerialPort, StopBits};
-use std::io::{self, Write /*, ErrorKind*/};
+use std::io::{Write /*, ErrorKind*/};
 use std::time::Duration;
 
 // TODO: Error Handling will be improved by myself later
@@ -39,7 +39,7 @@ impl Default for MySerialPort {
 
 impl MySerialPort {
     // ========== Constructor ========
-    // Specify the port name and open the port automatically
+    // Specify the port name
     pub fn new(port_name: String) -> Self {
         Self {
             port_name,
@@ -56,7 +56,7 @@ impl MySerialPort {
     // ========== Public functions ======
     //
     // Open a serial port
-    pub fn open(&self) -> Result<Box<dyn SerialPort>, ()> {
+    pub fn open(&self) -> Result<Box<dyn SerialPort>, String> {
         let builder = serialport::new(self.port_name.clone(), self.baud_rate)
             .stop_bits(self.stop_bits)
             .data_bits(self.data_bits)
@@ -64,8 +64,12 @@ impl MySerialPort {
             .flow_control(self.flow_control)
             .timeout(self.timeout);
 
-        let port = builder.open().unwrap();
-        Ok(port)
+        //let port = builder.open().unwrap();
+
+        match builder.open() {
+            Ok(port) => Ok(port),
+            Err(e) => Err(format!("Error: {}", e)),
+        }
     }
 
     // just &self is a reference not mutable
